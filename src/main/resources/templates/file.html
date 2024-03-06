@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>File upload</title>
+</head>
+<body>
+<div id="uploadContainer">
+    <input type="file" id="selectFile" name="selectFile" accept=".txt, .dat, .db, .sql, .pdf, .xls, .xlsx, .doc, .docx">
+    <input type="submit" id="uploadFile" value="Загрузить" />
+</div>
+
+<h2>Загруженные файлы</h2>
+<div id="filesContainer">
+    <ul id="fileList"></ul>
+</div>
+
+
+
+<script src="/js/upload_file.js"></script>
+</body>
+</html>
