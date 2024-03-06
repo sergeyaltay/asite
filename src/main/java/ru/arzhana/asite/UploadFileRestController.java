@@ -30,13 +30,15 @@ public class UploadFileRestController {
 
     private static final Logger log = LoggerFactory.getLogger(UploadFileRestController.class);
     private final FileDataService fileDataService;
+    private final ParserXlsSerials parserXlsSerials;
     @Value("${upload.path}")
     private String uploadPath;
     @Value("${spring.servlet.multipart.max-file-size}")
     private DataSize MAX_SIZE;
     @Autowired
-    public UploadFileRestController(FileDataService fileDataService) {
+    public UploadFileRestController(FileDataService fileDataService, ParserXlsSerials parserXlsSerials) {
         this.fileDataService = fileDataService;
+        this.parserXlsSerials = parserXlsSerials;
     }
 
 
@@ -89,9 +91,9 @@ public class UploadFileRestController {
                 if(fileIsXlsSerials(multipartFile)){
                     log.info("fileIsXlsSerials() TRUE");
                     Path pathSavedFile = Paths.get(uploadPath, fileDataSaved.getStoragePath(), fileDataSaved.getStorageName());
-                    ParserXlsSerials parserXlsSerials = new ParserXlsSerials(pathSavedFile);
-                    Thread thread = new Thread(parserXlsSerials);
-                    thread.start();
+//                    ParserXlsSerials parserXlsSerials = new ParserXlsSerials(pathSavedFile);
+                    parserXlsSerials.parsingProcess(pathSavedFile);
+
                 }
                 return ResponseEntity.ok().body(fileDataService.getLast25FileData());
             }
@@ -127,4 +129,5 @@ public class UploadFileRestController {
         }
         return false;
     }
+
 }

@@ -6,28 +6,37 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.repository.query.FluentQuery;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 
-public class ParserXlsSerials implements Runnable{
+@Service
+public class ParserXlsSerials{
     private static final Logger log = LoggerFactory.getLogger(ParserXlsSerials.class);
     private Path path;
     private File file;
     private String nameStation;
 
+    @Autowired
+    private DeskTableRepository repo;
 
-    private DeskTableService service;
+    public ParserXlsSerials() {
+    }
 
 
-    public ParserXlsSerials(Path pathSavedFile) {
-//        log.info("constructor() pathSavedFile: {}", pathSavedFile.toAbsolutePath());
-        this.service = new DeskTableService();
+    public void parsingProcess(Path pathSavedFile) {
+        log.info("parsingProcess() RUN");
         path = pathSavedFile;
         file = new File(pathSavedFile.toUri());
         Path fileNamePath = path.getFileName();
@@ -36,14 +45,10 @@ public class ParserXlsSerials implements Runnable{
             String[] arrName = fileName.trim().split("_");
 //            log.info("constructor() {} arrName size: {}", fileName, arrName.length);
             nameStation = arrName[1].trim();
-    //        nameStation = path.getFileName().toString().trim().split("_")[1];
+            //        nameStation = path.getFileName().toString().trim().split("_")[1];
             log.info("constructor() {}", nameStation);
         }
-    }
 
-    @Override
-    public void run() {
-        log.info("Thread RUN");
         List<DeskTable> listDeskTables = new ArrayList<>();
         try (FileInputStream inputStream = new FileInputStream(file);
              XSSFWorkbook book = new XSSFWorkbook(inputStream)) {
@@ -68,11 +73,7 @@ public class ParserXlsSerials implements Runnable{
                 });
             }
             if(!listDeskTables.isEmpty()) {
-                if (service != null) {
-                service.saveListDeskTable(listDeskTables);
-                } else {
-                log.error("service is null!");
-                }
+                repo.saveAll(listDeskTables);
             } else {
                 log.error("listDeskTables is Empty!");
             }
@@ -83,7 +84,7 @@ public class ParserXlsSerials implements Runnable{
         } finally {
             file = null;
             path = null;
-        };
+        }
     }
 
     private void parserRow(XSSFRow row) throws NumberFormatException{
@@ -116,6 +117,7 @@ public class ParserXlsSerials implements Runnable{
                 deskTable.setIdMapArea(403L);
                 deskTable.setIndexAxis(getAxisIndexByName(nameDesk));
                 deskTable.setIndexRow(getRowIndexByRowName(nameRow));
+                deskTable.setDateCreate(new Date());
                 log.info("Desk name:{} Station:{} Map:{} row:{} col:{}",
                         deskTable.getNameDesk(), deskTable.getIdStation(), deskTable.getIdMapArea(),
                         deskTable.getIndexRow(), deskTable.getIndexAxis());
